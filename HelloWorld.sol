@@ -1,9 +1,73 @@
 pragma solidity 0.5.3;
 
-contract HelloWorld {
+library SafeMath {
+    // pure - funcoes pure sao gratis, pois nao consultam e nem alteram nada da blockchain
+    function sum(uint a, uint b) internal pure returns (uint) {
+        uint c =  a + b;
+        require(c >= a, "Sum Overflow!");
+        
+        return c;
+    }
+
+    function sub(uint a, uint b) internal pure returns (uint) {
+        require(b <= a, "Sub Underflow!");
+        uint c = a - b;
+        
+        return c;
+    }
+
+    function mul(uint a, uint b) internal pure returns (uint) {
+        if(a == 0) {
+            return 0;
+        }
+        
+        uint c = a * b;
+        require(c / a == b, "Mul Overflow!");
+        
+        return c;
+    }
+    
+    // Divisao nao causa overflow
+    function div(uint a, uint b) internal pure returns (uint) {
+        uint c = a / b;
+        
+        return c;
+    }
+}
+
+contract Ownable {
+    // Sempre quando precisamos usar o sacar ether usamos o atributo payable
+    address payable public owner;
+    
+    // Eventos
+    // Esses eventos podem ser consultados por aplicativos web, maneira tbm de qualquer um registro de tudo que aconteceu
+    // É possivel tbm ser utilizado como uma fonte de dados bruto
+    event OwnershipTransferred(address newOwner);
+
+    // chamado uma vez na vida do contrato
+    constructor() public {
+        owner = msg.sender;
+    }
+
+    modifier onlyOwner() {
+        require(msg.sender == owner, "You are not the owner!");
+        _; // Executa o resto da função esse modifier é chamado 
+    }
+
+    function transferOwnership(address payable newOwner) onlyOwner public {
+        owner = newOwner;
+
+        emit OwnershipTransferred(owner);
+    }
+    
+}
+
+contract HelloWorld is Ownable {
+    using SafeMath for uint;
+    
     string public text; // Variavel global
     uint public number;
-    address public userAddress;
+    address payable public userAddress;
     bool public answer;
     mapping (address=>bool) public hasInterected;
     mapping (address=>uint) public hasCountInterected;
@@ -11,7 +75,7 @@ contract HelloWorld {
 
     // memory - o valor só vai estar disponivel enquanto essa função for executada
     // public - disponivel para qualquer usuario
-    function setText(string memory myText) public {
+    function setText(string memory myText) onlyOwner public {
         text = myText;
         setInterected();
         setCountInterected();
@@ -24,7 +88,7 @@ contract HelloWorld {
         // Condicao que bloqueia a execução da msg
         require(msg.value >= 1 ether, "Insufficient ETH sent.");
 
-        balances[msg.sender] += msg.value;
+        balances[msg.sender] = balances[msg.sender].sum(msg.value);
         number = myNumber;
         setInterected();
         setCountInterected();
@@ -48,7 +112,7 @@ contract HelloWorld {
     }
 
     function setCountInterected() private {
-        hasCountInterected[msg.sender] += 1;
+        hasCountInterected[msg.sender] = hasCountInterected[msg.sender].sum(1);
     }
 
     // transferencia de um endereço pra outro
@@ -69,32 +133,10 @@ contract HelloWorld {
         msg.sender.transfer(amount);
         
     }
-
-    // pure - funcoes pure sao gratis, pois nao consultam e nem alteram nada da blockchain
-    function sum(uint num1, uint num2) public pure returns (uint) {
-        return num1 + num2;
-    }
-
-    function sub(uint num1, uint num2) public pure returns (uint) {
-        return num1 - num2;
-    }
-
-    function mult(uint num1, uint num2) public pure returns (uint) {
-        return num1 * num2;
-    }
-
-    function div(uint num1, uint num2) public pure returns (uint) {
-        return num1 / num2;
-    }
-
-    // ** - potencia
-    function pow(uint num1, uint num2) public pure returns (uint) {
-        return num1 ** num2;
-    }
-
+    
     // view - funcoes view fazem apenas consultas na blockchain
     function sumStored(uint num1) public view returns (uint) {
-        return num1 + number;
+        return num1.sum(number);
     }
 
 }
