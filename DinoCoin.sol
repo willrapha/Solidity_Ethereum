@@ -78,7 +78,7 @@ contract ERC20 {
 contract BasicToken is Ownable, ERC20 {
     using SafeMath for uint;
 
-    uint internal _totalSupply;
+    uint internal _totalSupply = 300000000000000000000000000;
     mapping(address => uint) internal _balances;
     mapping(address => mapping(address => uint)) internal _allowed;
 
@@ -129,21 +129,13 @@ contract BasicToken is Ownable, ERC20 {
     }
 }
 
-contract MintableToken is BasicToken {
-    // indexed - podemos usar em tudo que vamos utilizar para ser filtrado
-    event Mint(address indexed to, uint tokens);
-
-    // mint - mintar token - é aumentar quanto o usuario tem daquele token e aumentar o total supply
-    function mint(address to, uint tokens) onlyOwner public {
-        _balances[to] = _balances[to].add(tokens);
-        _totalSupply = _totalSupply.add(tokens);
-
-        emit Mint(to, tokens);
-    }
-}
-
-contract TestCoin is MintableToken {
-    string public constant name = "Test Coin";
-    string public constant symbol = "TST";
+contract DinoCoin is BasicToken {
+    string public constant name = "Dino Coin";
+    string public constant symbol = "DC";
     uint8 public constant decimals = 18;
+ 
+
+    constructor() public {
+        _balances[msg.sender] = _totalSupply;
+    }
 }
